@@ -4,46 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Important Links</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #333; /* Dark gray background */
+            color: white;
             margin: 0;
             padding: 0;
         }
         header {
-            background-color: #333;
+            background-color: #222;
             color: white;
             padding: 20px;
             text-align: center;
         }
+        /* Search bar */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .search-bar {
+            padding: 15px;
+            font-size: 18px;
+            width: 400px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .add-link-btn {
+            padding: 15px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .add-link-btn:hover {
+            background-color: #218838;
+        }
         main {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center; /* Horizontally centers the links */
+            flex-wrap: wrap; /* Allows links to wrap if screen is small */
             margin-top: 30px;
         }
         .link {
             margin: 10px;
-            padding: 15px 25px;
-            font-size: 18px;
+            padding: 20px 30px;
+            font-size: 20px;
             text-decoration: none;
             color: white;
             background-color: #007BFF;
             border-radius: 5px;
             transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center; /* Centers the icon and text */
+            width: auto;
         }
         .link:hover {
             background-color: #0056b3;
         }
+        .link i {
+            margin-right: 10px;
+            font-size: 24px;
+        }
         footer {
-            background-color: #333;
+            background-color: #222;
             color: white;
             text-align: center;
             padding: 10px;
             position: fixed;
             width: 100%;
             bottom: 0;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: #444;
+            padding: 20px;
+            border-radius: 5px;
+            color: white;
+        }
+        .popup-content input, .popup-content button {
+            margin: 10px;
+            padding: 10px;
         }
     </style>
 </head>
@@ -53,16 +108,138 @@
     <h1>My Important Links</h1>
 </header>
 
-<main>
-    <a href="https://www.youtube.com" class="link" target="_blank">YouTube</a>
-    <a href="https://www.google.com" class="link" target="_blank">Google</a>
-    <a href="https://www.reddit.com" class="link" target="_blank">Reddit</a>
-    <!-- Add more links below -->
+<!-- Search Bar -->
+<div class="search-container">
+    <input type="text" class="search-bar" id="googleSearch" placeholder="Search Google...">
+    <button onclick="searchGoogle()" class="add-link-btn">Search</button>
+</div>
+
+<!-- Add Link Button (visible on the right of the links section) -->
+<button class="add-link-btn" onclick="openPopup()" style="margin: 20px; position: absolute; top: 100px; right: 30px;">+</button>
+
+<main id="linkContainer">
+    <!-- Links will be populated here -->
 </main>
+
+<!-- Popup for adding a new link -->
+<div class="popup" id="popup">
+    <div class="popup-content">
+        <h2>Add a New Link</h2>
+        <input type="text" id="newLinkUrl" placeholder="Enter link URL">
+        <input type="text" id="newLinkText" placeholder="Enter link text">
+        <button onclick="addNewLink()">Add Link</button>
+        <button onclick="closePopup()">Cancel</button>
+    </div>
+</div>
 
 <footer>
     <p>&copy; 2025 My Link Page</p>
 </footer>
+
+<script>
+// Function to open the popup
+function openPopup() {
+    document.getElementById("popup").style.display = "flex";
+}
+
+// Function to close the popup
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
+
+// Function to add a new link
+function addNewLink() {
+    const url = document.getElementById("newLinkUrl").value;
+    const text = document.getElementById("newLinkText").value;
+
+    if (url && text) {
+        const linkContainer = document.getElementById("linkContainer");
+
+        // Create new link
+        const newLink = document.createElement("a");
+        newLink.href = url;
+        newLink.classList.add("link");
+        newLink.target = "_blank";
+
+        // Determine the icon based on URL (for simplicity, using a default link icon)
+        const icon = document.createElement("i");
+        icon.classList.add("fas", "fa-link");
+        newLink.appendChild(icon);
+
+        // Add link text
+        newLink.innerHTML += " " + text;
+
+        // Add new link to the container
+        linkContainer.appendChild(newLink);
+
+        // Store the link in localStorage
+        saveLinks();
+
+        // Clear input fields and close popup
+        document.getElementById("newLinkUrl").value = '';
+        document.getElementById("newLinkText").value = '';
+        closePopup();
+    } else {
+        alert("Please enter both URL and link text.");
+    }
+}
+
+// Function to save links to localStorage
+function saveLinks() {
+    const linkContainer = document.getElementById("linkContainer");
+    const links = [];
+
+    // Get all links and store them in an array
+    const linkElements = linkContainer.getElementsByClassName("link");
+    for (let i = 0; i < linkElements.length; i++) {
+        const linkElement = linkElements[i];
+        links.push({
+            url: linkElement.href,
+            text: linkElement.innerText.replace(/\s+/g, ' ').trim(),
+        });
+    }
+
+    // Save the array in localStorage
+    localStorage.setItem("links", JSON.stringify(links));
+}
+
+// Function to load links from localStorage
+function loadLinks() {
+    const links = JSON.parse(localStorage.getItem("links")) || [];
+    const linkContainer = document.getElementById("linkContainer");
+
+    links.forEach(link => {
+        const newLink = document.createElement("a");
+        newLink.href = link.url;
+        newLink.classList.add("link");
+        newLink.target = "_blank";
+
+        // Add a generic icon (can be improved for specific sites)
+        const icon = document.createElement("i");
+        icon.classList.add("fas", "fa-link");
+        newLink.appendChild(icon);
+
+        // Add link text
+        newLink.innerHTML += " " + link.text;
+
+        // Append the link to the container
+        linkContainer.appendChild(newLink);
+    });
+}
+
+// Function to search Google
+function searchGoogle() {
+    const query = document.getElementById("googleSearch").value;
+    if (query) {
+        window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank");
+    } else {
+        alert("Please enter a search query.");
+    }
+}
+
+// Load links on page load
+window.onload = loadLinks;
+</script>
 
 </body>
 </html>
